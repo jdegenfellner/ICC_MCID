@@ -1,7 +1,7 @@
 # ICC and Test-Retest-Reliability
 
 library(pacman)
-p_load(tidyverse, lme4, conflicted)
+p_load(tidyverse, lme4, conflicted, psych)
 conflicts_prefer(stats::filter)
 
 # RMDQ: The score ranges from 0 (no disability) to 24 (max. disability) 
