@@ -3,6 +3,8 @@
 library(pacman)
 p_load(tidyverse, lme4, conflicted, psych)
 
+# 1) MCID Minimal Clinically Important Difference---------
+
 # HADS score---------
 # The Hospital Anxiety and Depression Scale 
 
@@ -100,7 +102,6 @@ predict(mod, newdata = data.frame(TP1 = 10), interval = "prediction") # 95% pred
 # Prediction interval width is ~5 times our minimally clinically important 
 # change of 1.68 for HADS-A.
 
-# Draw the regression line with the prediction interval-------------
 df %>% 
   ggplot(aes(x = TP1, y = TP2)) +
   # Color points conditionally
@@ -128,3 +129,43 @@ table(df$abs_diff > 1.68)/sum(table(df$abs_diff > 1.68)) #
 # even though the underlying truth did not change.
 
 # This result is near random guessing
+
+
+# 2) Effect on regression coefficients--------
+# Event though the HADS-A might be correct on average when testing multiple 
+# times within a person, testing once does not tell much about the 
+# underlying true value.
+
+# TODO: disturb x exactly so that it maps to the consequences of the ICC
+# possible?
+
+# Without added noise:
+n_sim <- 1000
+coef_vec <- numeric(n_sim)
+std_error_vec <- numeric(n_sim)
+for(i in 1:n_sim){
+  x <- rnorm(100, 0, 1)
+  y <- 2*x + rnorm(100, 0, 5)
+  mod <- lm(y ~ x)
+  coef_vec[i] <- mod$coefficients[2]  
+  std_error_vec[i] <- summary(mod)$coefficients[2, 2]
+}
+summary(coef_vec) 
+summary(std_error_vec)
+
+
+# With added noise to to test-retest-reliability:
+n_sim <- 1000
+coef_vec <- numeric(n_sim)
+std_error_vec <- numeric(n_sim)
+for(i in 1:n_sim){
+  x <- rnorm(100, 0, 1)
+  y <- 2*(x+ rnorm(100, 0, 2)) + rnorm(100, 0, 5)
+  mod <- lm(y ~ x)
+  coef_vec[i] <- mod$coefficients[2]  
+  std_error_vec[i] <- summary(mod)$coefficients[2, 2]
+}
+summary(coef_vec) # on average correct measurement.
+summary(std_error_vec) # increased
+summary(mod)
+
