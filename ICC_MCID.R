@@ -20,6 +20,8 @@ p_load(tidyverse, lme4, conflicted, psych)
 # Not exactly the same population as shift workers, but suffices for demonstration purposes.
 # MCID HADS anxiety score and 1.68 (1.48–1.87)
 
+# Simplication: Score is deemed to be continuous.
+
 # Create 2 correlated measurements:
 # (This could probably be improved by drawing from a bivariate normal distribution)
 # HADS-A Anxiety subscale
