@@ -1,7 +1,7 @@
 # ICC and Test-Retest-Reliability
 
 library(pacman)
-p_load(tidyverse, lme4, conflicted, psych)
+p_load(tidyverse, lme4, conflicted, psych, MASS)
 
 # MCID Minimal Clinically Important Difference---------
 
@@ -11,45 +11,33 @@ p_load(tidyverse, lme4, conflicted, psych)
 # Test-Retest-Reliability:
 # https://doi.org/10.1016/S1361-9004(02)00029-8
 
-# Let's use the numbers from here (Table 1):
+# Use the numbers from here (Table 1):
 # https://www.sciencedirect.com/science/article/abs/pii/S1361900402000298
-# just for demonstration purposes.
+# for demonstration purposes.
 
 # Minimal Clinically Important Difference (MCID) for HADS-A:
 # https://pmc.ncbi.nlm.nih.gov/articles/PMC2459149/
 # Not exactly the same population as shift workers, but suffices for demonstration purposes.
 # MCID HADS anxiety score and 1.68 (1.48–1.87)
 
-# Simplication: Score is deemed to be continuous.
+# Simplification: Score is deemed to be continuous.
 
 # Create 2 correlated measurements:
-# (This could probably be improved by drawing from a bivariate normal distribution)
-# HADS-A Anxiety subscale
+# Use HADS-A Anxiety subscale
 # Use n=100, instead of n=24 for more stability
-# Load necessary package
-library(MASS)
 
-# Parameters
 sigma1 <- 3.93  # Standard deviation of variable 1
 sigma2 <- 3.52  # Standard deviation of variable 2
 rho <- 0.82    # Correlation
-
-# Covariance matrix
 cov_matrix <- matrix(c(sigma1^2, rho * sigma1 * sigma2,
                        rho * sigma1 * sigma2, sigma2^2), nrow = 2)
-
-# Number of samples
 n <- 100
 
-# Generate random samples
 set.seed(188)  # For reproducibility
 samples <- mvrnorm(n = n, mu = c(7.92, 7.83), Sigma = cov_matrix)
-
-# Convert to data frame for visualization
 df <- as.data.frame(samples)
 colnames(df) <- c("TP1", "TP2")
 
-# Plot the samples
 plot(df, main = "Scatterplot of Multivariate Normal Samples",
      xlab = "TP1", ylab = "TP2", pch = 19, col = rgb(0, 0, 1, alpha = 0.5))
 
@@ -59,7 +47,7 @@ plot(df, main = "Scatterplot of Multivariate Normal Samples",
 cor(df$TP1, df$TP2, method = "pearson") # ~0.8-0.9
 ICC(df) # 0.82
 
-# manually
+# check manually
 df_mod <- data.frame(id = 1:n, df$TP1, df$TP2)
 names(df_mod) <- c("id", "TP1", "TP2")
 df_mod_long <- df_mod %>% pivot_longer(cols = c(TP1, TP2), names_to = "time_point", values_to = "score")
@@ -93,11 +81,9 @@ mod <- lm(TP2 ~ TP1, data = df)
 pred <- predict(mod, df, interval = "prediction")
 
 # How wide are the prediction intervals for a patient?
-# This answers the question: Where can I expect the second measurement 
-# of the SAME patient to be in x% of cases?
 as.data.frame(pred) %>% mutate(width_prediction_interval = upr - lwr) # width of the prediction interval 8-10 points!
 
-# example:
+# Example:
 predict(mod, newdata = data.frame(TP1 = 10), interval = "prediction") # 95% prediction interval for a patient with a score of 10 at time point 1.
 (13.56369 - 5.226282)/1.68
 
