@@ -3,7 +3,7 @@
 library(pacman)
 p_load(tidyverse, lme4, conflicted, psych)
 
-# 1) MCID Minimal Clinically Important Difference---------
+# MCID Minimal Clinically Important Difference---------
 
 # HADS score---------
 # The Hospital Anxiety and Depression Scale 
@@ -84,7 +84,7 @@ df <- data.frame(TP1 = df$TP1, TP2 = df$TP2) %>%
   dplyr::filter(TP1 >= 0) %>%
   dplyr::filter(TP2 >= 0) %>% # negative not possible
   dplyr::filter(TP1 <= 21) %>%
-  dplyr::filter(TP2 <= 21) # max. score is 24
+  dplyr::filter(TP2 <= 21) # max. score is 21
 df
 
 mod <- lm(TP2 ~ TP1, data = df)
@@ -112,11 +112,8 @@ df %>%
   geom_ribbon(aes(ymin = pred[,2], ymax = pred[,3]), alpha = 0.2) + 
   ggtitle("HADS-A and 95% Prediction Interval for TP2") +
   theme(plot.title = element_text(hjust = 0.5)) +
-  # Add y = x line in green
   geom_abline(intercept = 0, slope = 1, color = "green", linetype = "dashed") +
-  # Add y = x + 1.68 line in red
   geom_abline(intercept = 1.68, slope = 1, color = "red", linetype = "dashed") +
-  # Add y = x - 1.68 line in red
   geom_abline(intercept = -1.68, slope = 1, color = "red", linetype = "dashed")
 
 # How often is TP2 within the MCIC of 1.68 points?---------
@@ -131,41 +128,5 @@ table(df$abs_diff > 1.68)/sum(table(df$abs_diff > 1.68)) #
 # This result is near random guessing
 
 
-# 2) Effect on regression coefficients--------
-# Event though the HADS-A might be correct on average when testing multiple 
-# times within a person, testing once does not tell much about the 
-# underlying true value.
 
-# TODO: disturb x exactly so that it maps to the consequences of the ICC
-# possible?
-
-# Without added noise:
-n_sim <- 1000
-coef_vec <- numeric(n_sim)
-std_error_vec <- numeric(n_sim)
-for(i in 1:n_sim){
-  x <- rnorm(100, 0, 1)
-  y <- 2*x + rnorm(100, 0, 5)
-  mod <- lm(y ~ x)
-  coef_vec[i] <- mod$coefficients[2]  
-  std_error_vec[i] <- summary(mod)$coefficients[2, 2]
-}
-summary(coef_vec) 
-summary(std_error_vec)
-
-
-# With added noise to to test-retest-reliability:
-n_sim <- 1000
-coef_vec <- numeric(n_sim)
-std_error_vec <- numeric(n_sim)
-for(i in 1:n_sim){
-  x <- rnorm(100, 0, 1)
-  y <- 2*(x+ rnorm(100, 0, 2)) + rnorm(100, 0, 5)
-  mod <- lm(y ~ x)
-  coef_vec[i] <- mod$coefficients[2]  
-  std_error_vec[i] <- summary(mod)$coefficients[2, 2]
-}
-summary(coef_vec) # on average correct measurement.
-summary(std_error_vec) # increased
-summary(mod)
 
