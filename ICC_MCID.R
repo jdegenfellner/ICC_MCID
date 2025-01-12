@@ -101,11 +101,22 @@ predict(mod, newdata = data.frame(TP1 = 10), interval = "prediction") # 95% pred
 # change of 1.68 for HADS-A.
 
 # Draw the regression line with the prediction interval-------------
-df %>% ggplot(aes(x = TP1, y = TP2)) +
-  geom_point() +
+df %>% 
+  ggplot(aes(x = TP1, y = TP2)) +
+  # Color points conditionally
+  geom_point(aes(color = ifelse(TP2 > TP1 + 1.68 | TP2 < TP1 - 1.68, "red", "black"))) +
+  scale_color_manual(values = c("red" = "red", "black" = "black"), guide = "none") +
   geom_abline(intercept = mod$coefficients[1], slope = mod$coefficients[2]) +
-  geom_smooth(method = "lm", se = FALSE) + 
-  geom_ribbon(aes(ymin = pred[,2], ymax = pred[,3]), alpha = 0.2)
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_ribbon(aes(ymin = pred[,2], ymax = pred[,3]), alpha = 0.2) + 
+  ggtitle("HADS-A and 95% Prediction Interval for TP2") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  # Add y = x line in green
+  geom_abline(intercept = 0, slope = 1, color = "green", linetype = "dashed") +
+  # Add y = x + 1.68 line in red
+  geom_abline(intercept = 1.68, slope = 1, color = "red", linetype = "dashed") +
+  # Add y = x - 1.68 line in red
+  geom_abline(intercept = -1.68, slope = 1, color = "red", linetype = "dashed")
 
 # How often is TP2 within the MCIC of 1.68 points?---------
 df$abs_diff <- abs(df$TP1 - df$TP2)
